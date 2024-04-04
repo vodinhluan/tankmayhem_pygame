@@ -1,12 +1,13 @@
 # tank_mayhem.py (main)
 import pygame
 from core.tank import Tank
+import math
 
 # Initialize Pygame
 pygame.init()
 
 # Screen dimensions
-SCREEN_WIDTH, SCREEN_HEIGHT = 1000, 600
+SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Tank Mayhem")
 
@@ -16,12 +17,12 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 
 # Frame rate
-FPS = 80
+FPS = 60
 clock = pygame.time.Clock()
 
-# Create tanks for player 1 and player 2
-player1_tank = Tank(100, 100, 40, 60, GREEN, 5, {pygame.K_a: True, pygame.K_d: True, pygame.K_w: True, pygame.K_s: True})
-player2_tank = Tank(600, 100, 40, 60, BLUE, 5, {pygame.K_LEFT: True, pygame.K_RIGHT: True, pygame.K_UP: True, pygame.K_DOWN: True})
+# Create tanks for player 1 and player 2 with the updated movement controls
+player1_tank = Tank(100, 100, 40, 60, GREEN, 5, 0, {pygame.K_a: True, pygame.K_d: True, pygame.K_w: True, pygame.K_s: True})
+player2_tank = Tank(600, 100, 40, 60, BLUE, 5, 0, {pygame.K_LEFT: True, pygame.K_RIGHT: True, pygame.K_UP: True, pygame.K_DOWN: True})
 
 # Main game loop
 running = True
