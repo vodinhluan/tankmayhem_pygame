@@ -1,5 +1,5 @@
 import pygame
-from PrimarySettings import *
+from Settings import *
 from sprites import *
 from os import path
 import random
