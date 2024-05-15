@@ -43,13 +43,52 @@ class Game:
                 self.image_loading_of_explosion.set_colorkey(BLACK)
                 self.image = pygame.transform.scale(self.image_loading_of_explosion, (50, 50))
                 self.explosion_list.append(self.image)
+    def menu(self):
+        pygame.font.init()  # you have to call this at the start,
+        button_font = pygame.font.Font(None, 30)
 
-   
+        button_width = 200
+        button_height = 50
+        offline_button = pygame.Rect(WIDTH / 2 - button_width / 2, HEIGHT / 2 - button_height / 2, button_width, button_height)
+        online_button = pygame.Rect(WIDTH / 2 - button_width / 2, HEIGHT / 2 + button_height, button_width, button_height)
 
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
 
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = event.pos
+                    if offline_button.collidepoint(mouse_pos):
+                        self.new()
+                        self.run()
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = event.pos
+                    if online_button.collidepoint(mouse_pos):
+                        pass
+
+            self.screen.fill(BGCOLOR)
+            pygame.draw.rect(self.screen, (0, 255, 0), offline_button)
+            pygame.draw.rect(self.screen, (0, 0, 255), online_button)
+
+            offline_text = button_font.render("Offline", True, (0, 0, 0))  
+            online_text = button_font.render("Online", True, (0, 0, 0))  
+            self.screen.blit(offline_text, (offline_button.x + (offline_button.width - offline_text.get_width()) // 2, 
+                                            offline_button.y + (offline_button.height - offline_text.get_height()) // 2))
+            self.screen.blit(online_text, (online_button.x + (online_button.width - online_text.get_width()) // 2, 
+                                           online_button.y + (online_button.height - online_text.get_height()) // 2))
+
+            pygame.display.flip()  # update display
+
+        self.quit()
 
 # create game objects
 g = Game()
 while True:
-
+    g.menu()
+    g.new()
     g.run()
+
+
