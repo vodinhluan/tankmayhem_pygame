@@ -87,8 +87,8 @@ class Game:
             self.screen.blit(title_text, title_rect)
 
             # Draw buttons
-            pygame.draw.rect(self.screen, (0, 255, 0), offline_button)
-            pygame.draw.rect(self.screen, (0, 0, 255), online_button)
+            pygame.draw.rect(self.screen, (192,192,192), offline_button)
+            pygame.draw.rect(self.screen, ((255,255,0)) , online_button)
 
             offline_text = button_font.render("Offline", True, (0, 0, 0))
             online_text = button_font.render("Online", True, (0, 0, 0))
