@@ -3,6 +3,13 @@ from Setting import *
 from os import path
 import random
 
+from sprites.Wall import Wall
+from sprites.Player import Player
+from sprites.Bullet import Bullet
+from sprites.Enemy import Enemy
+
+
+
 class Game:
 
     def __init__(self):
@@ -41,6 +48,50 @@ class Game:
             self.image_loading_of_explosion.set_colorkey(BLACK)
             self.image = pygame.transform.scale(self.image_loading_of_explosion, (50, 50))
             self.explosion_list.append(self.image)
+
+    def new(self):
+        # initializing all variables and setup them for a new game
+        self.walls = pygame.sprite.Group()  # created the walls group to hold them all
+        self.bullets = pygame.sprite.Group()
+        self.shields = pygame.sprite.Group()
+        self.all_sprites = pygame.sprite.Group()
+        for row, tiles in enumerate(self.map):
+            for col, tile in enumerate(tiles):
+                if tile == '1':
+                    Wall(self, col, row)
+                if tile == '*':
+                    self.player = Player(self, col, row)
+                if tile == '-':
+                    self.enemy = Enemy(self, col, row)
+                # if tile == '@':
+                #     ShieldItem(self, col, row)
+                    
+        self.game_over = False  # Đặt lại trạng thái game
+        self.Score = False # reset score 
+
+    def run(self):
+            while not self.game_over:  # Thay đổi điều kiện dừng vòng lặp
+                self.changing_time = self.clock.tick(FPS) / 1000
+                self.events()
+                self.update()
+                self.draw()
+                
+            # Reset trạng thái điểm khi kết thúc màn chơi
+            self.SCORE2 = 0
+            self.SCORE1 = 0
+            
+            while self.playing:
+                self.changing_time = self.clock.tick(FPS) / 1000
+                self.events()
+                self.update()
+                self.draw()
+
+                # Thêm kiểm tra để chuyển sang trạng thái chơi game khi điều kiện đạt được
+                if self.Score:
+                    self.SCORE2 = 0
+                    self.SCORE1 = 0
+                    self.new()
+                    self.run()
 
     def menu(self):
         folder_of_game = path.dirname(__file__)
