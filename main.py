@@ -7,6 +7,8 @@ from sprites.Wall import Wall
 from sprites.Player import Player
 from sprites.Bullet import Bullet
 from sprites.Enemy import Enemy
+from sprites.Explosion import Explosion
+
 
 
 
@@ -174,7 +176,7 @@ class Game:
     def update(self):
         # keep track changing
         self.all_sprites.update()
-        # self.hit()
+        self.hit()
 
     def draw(self):
         # flip all the thing to screen
@@ -188,6 +190,42 @@ class Game:
         drawing_text(self.screen, 'Blue Tank:' + str(self.SCORE2), 25, 900, 710, BLUE)
         pygame.display.flip()
 
+    def hit(self):
+        self.hits1 = pygame.sprite.spritecollide(self.player, self.bullets, True, collide)
+        if self.hits1:
+            Explosion(self, self.player.rect.center)
+            self.explosion_sound.play()
+            self.player.kill()
+            self.SCORE1 += 1
+            self.playing = False
+            self.all_sprites.draw(self.screen)
+            pygame.display.flip()
+            pygame.time.delay(1000)
+            self.new()
+            self.data()
+            
+        if self.SCORE1 == 5:
+            self.show_go_screen1()
+                    
+        self.hits2 = pygame.sprite.spritecollide(self.enemy, self.bullets, True, collide)
+        if self.hits2:
+            Explosion(self, self.enemy.rect.center)
+            self.explosion_sound.play()
+            self.enemy.kill()
+            self.SCORE2 += 1
+            self.playing = False
+            self.all_sprites.draw(self.screen)
+            pygame.display.flip()
+            pygame.time.delay(1000)
+            self.new()
+            self.data()
+            
+        if self.SCORE2 == 5:
+            self.show_go_screen2()
+                    
+        # Draw all sprites after updating the explosions
+        self.all_sprites.draw(self.screen)
+        pygame.display.flip()  # Update the display after drawing
 
 # Create game object
 g = Game()
