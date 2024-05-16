@@ -93,6 +93,12 @@ class Game:
                     self.new()
                     self.run()
 
+    def grid(self):
+        for x in range(0, WIDTH, SQSIZE):
+            pygame.draw.line(self.screen, WHITE, (x, 0), (x, HEIGHT))
+        for y in range(0, HEIGHT, SQSIZE):
+            pygame.draw.line(self.screen, WHITE, (0, y), (WIDTH, y))
+
     def menu(self):
         folder_of_game = path.dirname(__file__)
         image_folder = path.join(folder_of_game, 'imagefolder')
@@ -153,7 +159,35 @@ class Game:
         self.quit()
 
     def quit(self):
+        
         pygame.quit()
+
+    def events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.quit()
+
+            if self.game_over and event.type == pygame.KEYUP:
+                self.new()
+                self.run()
+                
+    def update(self):
+        # keep track changing
+        self.all_sprites.update()
+        # self.hit()
+
+    def draw(self):
+        # flip all the thing to screen
+        self.screen.fill(BGCOLOR)
+        self.grid()
+        self.all_sprites.draw(self.screen)
+        # kietbui
+        # item_rect = self.threebullet.get_rect(center=self.screen.get_rect().center)
+        # self.screen.blit(self.threebullet, item_rect)
+        drawing_text(self.screen, str(self.SCORE1) + ':Green Tank', 25, 150, 710, GREEN)
+        drawing_text(self.screen, 'Blue Tank:' + str(self.SCORE2), 25, 900, 710, BLUE)
+        pygame.display.flip()
+
 
 # Create game object
 g = Game()
