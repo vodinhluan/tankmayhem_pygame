@@ -2,6 +2,8 @@ import pygame
 from Setting import *
 from os import path
 import random
+import socket
+import threading
 
 from sprites.Wall import Wall
 from sprites.Player import Player
@@ -9,30 +11,38 @@ from sprites.Bullet import Bullet
 from sprites.Enemy import Enemy
 from sprites.Explosion import Explosion
 
-screen = pygame.display.set_mode((WIDTH,HEIGHT))
+HOST = '192.168.1.105'  # Replace with server's hostname or IP address
+PORT = 65432
+g_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+Screen = pygame.display.set_mode((WIDTH,HEIGHT))
 bgStart = pygame.image.load('imagefolder/bgS.png').convert_alpha()
-btnStart = pygame.image.load('imagefolder/btnStart.png').convert_alpha()
-nameGame = pygame.image.load('imagefolder/nameGame.png').convert_alpha()
-btnExit = pygame.image.load('imagefolder/btnExit.png').convert_alpha()
-cup = pygame.image.load('imagefolder/cup.png').convert_alpha()
-player1 = pygame.image.load('imagefolder/tank_green.png').convert_alpha()
-player2 = pygame.image.load('imagefolder/tank_blue.png').convert_alpha()
 bgWin = pygame.image.load('imagefolder/bgWin.png').convert_alpha()
+
+btnStart = pygame.image.load('imagefolder/btnStart.png').convert_alpha()
+btnOffline = pygame.image.load('imagefolder/btnOffline.png').convert_alpha()
+btnExit = pygame.image.load('imagefolder/btnExit.png').convert_alpha()
+nameGame = pygame.image.load('imagefolder/nameGame.png').convert_alpha()
+cup = pygame.image.load('imagefolder/cup.png').convert_alpha()
 textWin = pygame.image.load('imagefolder/textWin.png').convert_alpha()
+
 btnSoundOn = pygame.image.load('imagefolder/sound-on.png').convert_alpha()
 btnSoundOff = pygame.image.load('imagefolder/sound-off.png').convert_alpha()
-
 
 class Game:
 
     def __init__(self):
         pygame.init()  # Initialize all imported pygame modules
         pygame.mixer.init()
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.screen = Screen
         self.clock = pygame.time.Clock()  # Create an object to help track time
         pygame.display.set_caption(TITLE)
         self.SCORE1 = 0
         self.SCORE2 = 0
+        self.last_maze_no = 0
+        self.sound_on = True
+        pygame.mixer.music.load('sound/background_music.mp3')  # tải file nhạc
+        pygame.mixer.music.play(-1)  # phát nhạc (lặp đi lặp lại với -1)
         self.data()
 
     def data(self):
@@ -41,7 +51,11 @@ class Game:
         Maps = path.join(folder_of_game, 'MAPS')
         sound_folder = path.join(folder_of_game, 'sound')
         self.map = []
-        i = random.randint(1, 5)
+        if hasattr(self, 'last_maze_no'):
+            i = random.choice([j for j in range(1, 11) if j != self.last_maze_no])
+        else:
+            i = random.randint(1, 10)
+        self.last_maze_no = i
         with open(path.join(Maps, 'MAP{}.txt'.format(i)), 'rt') as f:
             for line in f:
                 self.map.append(line)
@@ -113,31 +127,18 @@ class Game:
             pygame.draw.line(self.screen, WHITE, (0, y), (WIDTH, y))
 
     def menu(self):
-        folder_of_game = path.dirname(__file__)
-        image_folder = path.join(folder_of_game, 'imagefolder')
-
-        # Load background image with error handling
-        try:
-            self.bg_image = pygame.transform.scale(
-                pygame.image.load(path.join(image_folder, "bgS.png")).convert(),
-                (WIDTH, HEIGHT)
-            )
-        except pygame.error as e:
-            print(f"Unable to load background image: {e}")
-            return
-
-        # Initialize font and buttons
-        pygame.font.init()
-        button_font = pygame.font.Font(None, 30)
-        title_font = pygame.font.Font(None, 100)  # Define a larger font for the title
-        button_width = 200
-        button_height = 50
-        offline_button = pygame.Rect(WIDTH / 2 - button_width / 2, HEIGHT / 2 - button_height / 2, button_width, button_height)
-        online_button = pygame.Rect(WIDTH / 2 - button_width / 2, HEIGHT / 2 + button_height, button_width, button_height)
-
+        # Initialize buttons
+        bgS = pygame.transform.scale(bgStart, (WIDTH, HEIGHT))
+        button_width = btnStart.get_width()
+        button_height = btnStart.get_height()
+        online_button = pygame.Rect(WIDTH / 2 - button_width / 2, HEIGHT / 2 - button_height / 2, button_width, button_height)
+        offline_button = pygame.Rect(WIDTH / 2 - button_width / 2, HEIGHT / 2 + button_height, button_width, button_height)
+        exit_button = pygame.Rect(WIDTH / 2 - button_width / 2, HEIGHT / 2 + button_height * 2.5  , button_width, button_height)
+        sound_button = pygame.Rect(0, 0, btnSoundOn.get_width(), btnSoundOn.get_height())
+        
         running = True
         while running:
-            self.screen.blit(self.bg_image, (0, 0))  # Draw the background image first
+            self.screen.blit(bgS, (0, 0))  # Draw the background image first
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -149,30 +150,37 @@ class Game:
                         self.new()
                         self.run()
                     elif online_button.collidepoint(mouse_pos):
-                        pass
-
-            # Draw the title text
-            title_text = title_font.render("TANK MAYHEM", True, (197, 76, 0))
-            title_rect = title_text.get_rect(center=(WIDTH / 2, HEIGHT / 4))
-            self.screen.blit(title_text, title_rect)
-
-            # Draw buttons
-            pygame.draw.rect(self.screen, (192,192,192), offline_button)
-            pygame.draw.rect(self.screen, ((255,255,0)) , online_button)
-
-            offline_text = button_font.render("Offline", True, (0, 0, 0))
-            online_text = button_font.render("Online", True, (0, 0, 0))
-            self.screen.blit(offline_text, (offline_button.x + (offline_button.width - offline_text.get_width()) // 2,
-                                            offline_button.y + (offline_button.height - offline_text.get_height()) // 2))
-            self.screen.blit(online_text, (online_button.x + (online_button.width - online_text.get_width()) // 2,
-                                           online_button.y + (online_button.height - online_text.get_height()) // 2))
-
+                        g_socket.connect((HOST, PORT))
+                        print(f"connect server success!!!")
+                        g_socket.close()
+                    elif exit_button.collidepoint(mouse_pos):
+                        self.quit()
+                    elif sound_button.collidepoint(mouse_pos):
+                        self.sound_on = not self.sound_on
+                        if self.sound_on:
+                            pygame.mixer.music.play(-1)  # Phát nhạc lặp lại
+                        else:
+                            pygame.mixer.music.stop()
+                    
+            # Draw the title image
+            title_rect = nameGame.get_rect(center=(WIDTH / 2, HEIGHT / 8))
+            self.screen.blit(nameGame, title_rect)
+            
+            # Draw button images
+            self.screen.blit(btnStart, online_button.topleft)
+            self.screen.blit(btnOffline, offline_button.topleft)
+            self.screen.blit(btnExit, exit_button.topleft)
+            
+            if self.sound_on:
+                self.screen.blit(btnSoundOn, sound_button.topleft)
+            else:
+                self.screen.blit(btnSoundOff, sound_button.topleft)
+                
             pygame.display.flip()  # Update display
 
         self.quit()
 
     def quit(self):
-        
         pygame.quit()
 
     def events(self):
@@ -212,8 +220,8 @@ class Game:
             self.all_sprites.draw(self.screen)
             pygame.display.flip()
             pygame.time.delay(1000)
-            self.new()
             self.data()
+            self.new()
             
         if self.SCORE1 == 5:
             self.show_go_screen1()
@@ -228,8 +236,8 @@ class Game:
             self.all_sprites.draw(self.screen)
             pygame.display.flip()
             pygame.time.delay(1000)
-            self.new()
             self.data()
+            self.new()
             
         if self.SCORE2 == 5:
             self.show_go_screen2()
@@ -239,29 +247,31 @@ class Game:
         pygame.display.flip()  # Update the display after drawing
 
     def show_go_screen1(self):
-        self.screen.fill(BROWN)
-        self.screen.blit(cup, (400,0))
+        bgW = pygame.transform.scale(bgWin, (WIDTH, HEIGHT))
+        self.screen.blit(bgW,(0,0))
+        self.screen.blit(textWin,(120,0))
+        # self.screen.blit(cup, (400,0))
         drawing_text(self.screen, 'Green Tank Win', 80, WIDTH / 2, HEIGHT / 3, GREEN)
         drawing_text(self.screen, 'SCORE:' + str(self.SCORE1) + '-' + str(self.SCORE2), 40, WIDTH / 2,  340, GREEN)
-        drawing_text(self.screen, 'Press enter key to begin or escape key to quit', 40, WIDTH / 2, HEIGHT / 2, WHITE)
-        scaled_player1 = pygame.transform.scale(player1, (300, 300))
-        self.screen.blit(scaled_player1, (350,500))
+        drawing_text(self.screen, 'Press enter key to begin or escape key to quit', 20, WIDTH / 2, HEIGHT - 30 , RED)
+       
         pygame.display.flip()
         self.wait_for_key()
         self.game_over = True
         
     def show_go_screen2(self):
-        self.screen.fill(BROWN)
-        self.screen.blit(cup, (400,0))
+        bgW = pygame.transform.scale(bgWin, (WIDTH, HEIGHT))
+        self.screen.blit(bgW,(0,0))
+        self.screen.blit(textWin,(120,0))
+        # self.screen.blit(cup, (400,0))
         drawing_text(self.screen, 'Blue Tank Win', 80, WIDTH / 2, HEIGHT / 3, BLUE)
         drawing_text(self.screen, 'SCORE:' + str(self.SCORE2) + '-' + str(self.SCORE1) , 40, WIDTH / 2, 340, BLUE)
-        drawing_text(self.screen, 'Press enter key to begin or escape key to quit', 40, WIDTH / 2, HEIGHT / 2, WHITE)
-        scaled_player2 = pygame.transform.scale(player2, (300, 300))
-        self.screen.blit(scaled_player2, (350,500))
+        drawing_text(self.screen, 'Press enter key to begin or escape key to quit', 20, WIDTH / 2, HEIGHT - 30, RED)
+   
         pygame.display.flip()
         self.wait_for_key()
         self.game_over = True
-
+        
     def wait_for_key(self):
         key_pressed = False
         while not key_pressed:
@@ -270,10 +280,11 @@ class Game:
                 if event.type == pygame.QUIT:
                     self.quit()
                 if event.type == pygame.KEYUP:
-                    if event.key == pygame.K_RETURN:  # Only break the loop if 'Enter' is pressed
+                    if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE:  # Only break the loop if 'Enter' is pressed
                          key_pressed = True
         self.Score = False  # Đặt lại trạng thái chơi game
 
+        
 # Create game object
 g = Game()
 while True:

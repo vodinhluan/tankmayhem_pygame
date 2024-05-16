@@ -23,20 +23,24 @@ class Player(pygame.sprite.Sprite):
         self.rotation_speed = 0
         self.should_fire = False
 
-    def keys(self):
-        # get key for velocity every frame
-        self.rotation_speed = 0  # not rotating
+    def update_key_state(self):
+        key_state = self.last_key_state
+
+        self.rotation_speed = 0
         self.vel = vector(0, 0)
-        keys_state = pygame.key.get_pressed()
-        if keys_state[pygame.K_a]:
+
+        if len(key_state) == 0:
+            return
+
+        if key_state[pygame.K_LEFT]:
             self.rotation_speed = +RotationSpeedOfPlayer
-        if keys_state[pygame.K_d]:
+        if key_state[pygame.K_RIGHT]:
             self.rotation_speed = -RotationSpeedOfPlayer
-        if keys_state[pygame.K_w]:
+        if key_state[pygame.K_UP]:
             self.vel = vector(0, playerSpeed).rotate(-self.rot)
-        if keys_state[pygame.K_s]:
+        if key_state[pygame.K_DOWN]:
             self.vel = vector(0, -playerSpeed/2).rotate(-self.rot)
-        if keys_state[pygame.K_q]:
+        if key_state[pygame.K_m] or self.should_fire:
             now = pygame.time.get_ticks()
             if now - self.last_fire > bullet_rate:
                 self.last_fire = now
@@ -44,6 +48,9 @@ class Player(pygame.sprite.Sprite):
                 position = self.position + turret.rotate(-self.rot)
                 Bullet(self.game, position, direction)
                 self.game.shoot_sound.play()
+                self.should_fire = False
+
+        self.last_key_state = key_state
 
     def collide_with_walls(self, direction):
         if direction == 'x_direction':
@@ -69,7 +76,7 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         # do whatever you want before this function in reality and this function change them into pixel
-        self.keys()
+        self.update_key_state()
         self.rot = (self.rot + self.rotation_speed * self.game.changing_time) % 360
         self.image = pygame.transform.rotate(self.game.player_image, self.rot)
         self.rect = self.image.get_rect()
