@@ -44,11 +44,11 @@ class Game:
     def data(self):
             folder_of_game = path.dirname(__file__)  # location of main.py
             image_folder = path.join(folder_of_game, 'imagefolder')
-            Mazefolder = path.join(folder_of_game, 'MAZEFOLDER')
-            sound_folder = path.join(folder_of_game, 'snd')
+            Mapsfolder = path.join(folder_of_game, 'MAPS')
+            sound_folder = path.join(folder_of_game, 'sound')
             self.maze = []
             i = 1
-            with open(path.join(Mazefolder, 'MAZE{}.txt'.format(i)), 'rt') as f:
+            with open(path.join(Mapsfolder, 'MAP{}.txt'.format(i)), 'rt') as f:
                 for line in f:
                     self.maze.append(line)
             self.player_image = pygame.image.load(path.join(image_folder, PLAYER_IMAGE)).convert()
