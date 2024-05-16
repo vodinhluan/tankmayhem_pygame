@@ -2,12 +2,18 @@ import pygame
 from Setting import *
 from os import path
 import random
+import socket
+import threading
 
 from sprites.Wall import Wall
 from sprites.Player import Player
 from sprites.Bullet import Bullet
 from sprites.Enemy import Enemy
 from sprites.Explosion import Explosion
+
+HOST = '192.168.1.105'  # Replace with server's hostname or IP address
+PORT = 65432
+g_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 Screen = pygame.display.set_mode((WIDTH,HEIGHT))
 bgStart = pygame.image.load('imagefolder/bgS.png').convert_alpha()
@@ -139,7 +145,11 @@ class Game:
                         self.new()
                         self.run()
                     elif online_button.collidepoint(mouse_pos):
-                        pass
+                        g_socket.connect((HOST, PORT))
+                        print(f"connect server success!!!")
+                        g_socket.close()
+                    elif exit_button.collidepoint(mouse_pos):
+                        self.quit()
                     elif sound_button.collidepoint(mouse_pos):
                         self.sound_on = not self.sound_on
                         if self.sound_on:
@@ -166,7 +176,6 @@ class Game:
         self.quit()
 
     def quit(self):
-        
         pygame.quit()
 
     def events(self):
