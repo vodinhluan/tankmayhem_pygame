@@ -1,19 +1,19 @@
-import pygame
-from Setting import *
-from os import path
-import random
-import socket
-import threading
+HOST = '192.168.2.9'  # Replace with server's hostname or IP address
+PORT = 65432
 
+import socket
+import pygame
+import threading
+import pickle
+from Setting import *
 from sprites.Wall import Wall
 from sprites.Player import Player
 from sprites.Bullet import Bullet
 from sprites.Enemy import Enemy
 from sprites.Explosion import Explosion
+from os import path
 
-HOST = '192.168.1.105'  # Replace with server's hostname or IP address
-PORT = 65432
-g_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+import random
 
 Screen = pygame.display.set_mode((WIDTH,HEIGHT))
 bgStart = pygame.image.load('imagefolder/bgS.png').convert_alpha()
@@ -30,102 +30,45 @@ btnSoundOn = pygame.image.load('imagefolder/sound-on.png').convert_alpha()
 btnSoundOff = pygame.image.load('imagefolder/sound-off.png').convert_alpha()
 
 class Game:
-
     def __init__(self):
-        pygame.init()  # Initialize all imported pygame modules
+        pygame.init()  # initialize all imported pygame modules
         pygame.mixer.init()
-        self.screen = Screen
-        self.clock = pygame.time.Clock()  # Create an object to help track time
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.clock = pygame.time.Clock()  # create an object to help track time
         pygame.display.set_caption(TITLE)
         self.SCORE1 = 0
         self.SCORE2 = 0
-        self.last_maze_no = 0
-        self.sound_on = True
-        pygame.mixer.music.load('sound/background_music.mp3')  # tải file nhạc
-        pygame.mixer.music.play(-1)  # phát nhạc (lặp đi lặp lại với -1)
         self.data()
+        self.is_online = None
 
     def data(self):
-        folder_of_game = path.dirname(__file__)  # Location of main.py
-        image_folder = path.join(folder_of_game, 'imagefolder')
-        Maps = path.join(folder_of_game, 'MAPS')
-        sound_folder = path.join(folder_of_game, 'sound')
-        self.map = []
-        if hasattr(self, 'last_maze_no'):
-            i = random.choice([j for j in range(1, 11) if j != self.last_maze_no])
-        else:
-            i = random.randint(1, 10)
-        self.last_maze_no = i
-        with open(path.join(Maps, 'MAP{}.txt'.format(i)), 'rt') as f:
-            for line in f:
-                self.map.append(line)
-        self.player_image = pygame.image.load(path.join(image_folder, PLAYER_IMAGE)).convert()
-        self.player_image.set_colorkey(WHITE)
-        self.enemy_image = pygame.image.load(path.join(image_folder, ENEMY_IMAGE)).convert()
-        self.enemy_image.set_colorkey(WHITE)
-        self.wall_image = pygame.image.load(path.join(image_folder, WALL_IMAGE)).convert()
-        self.bullet_image = pygame.image.load(path.join(image_folder, BULLET_IMAGE)).convert()
-        self.bullet_image.set_colorkey(WHITE)
-        self.shoot_sound = pygame.mixer.Sound(path.join(sound_folder, 'shoot.wav'))
-        self.explosion_sound = pygame.mixer.Sound(path.join(sound_folder, 'Explosion20.wav'))
-        self.explosion_list = []
-        for j in range(9):
-            picture_name = 'regularExplosion0{}.png'.format(j)
-            self.image_loading_of_explosion = pygame.image.load(path.join(image_folder, picture_name)).convert()
-            self.image_loading_of_explosion.set_colorkey(BLACK)
-            self.image = pygame.transform.scale(self.image_loading_of_explosion, (50, 50))
-            self.explosion_list.append(self.image)
+            folder_of_game = path.dirname(__file__)  # location of main.py
+            image_folder = path.join(folder_of_game, 'imagefolder')
+            Mazefolder = path.join(folder_of_game, 'MAZEFOLDER')
+            sound_folder = path.join(folder_of_game, 'snd')
+            self.maze = []
+            i = 1
+            with open(path.join(Mazefolder, 'MAZE{}.txt'.format(i)), 'rt') as f:
+                for line in f:
+                    self.maze.append(line)
+            self.player_image = pygame.image.load(path.join(image_folder, PLAYER_IMAGE)).convert()
+            self.player_image.set_colorkey(WHITE)
+            self.enemy_image = pygame.image.load(path.join(image_folder, ENEMY_IMAGE)).convert()
+            self.enemy_image.set_colorkey(WHITE)
+            self.wall_image = pygame.image.load(path.join(image_folder, WALL_IMAGE)).convert()
+            self.bullet_image = pygame.image.load(path.join(image_folder, BULLET_IMAGE)).convert()
+            self.bullet_image.set_colorkey(WHITE)
+            self.shoot_sound = pygame.mixer.Sound(path.join(sound_folder, 'shoot.wav'))
+            self.explosion_sound = pygame.mixer.Sound(path.join(sound_folder, 'Explosion20.wav'))
+            self.explosion_list = []
+            for j in range(9):
+                picture_name = 'regularExplosion0{}.png'.format(j)
+                self.image_loading_of_explosion = pygame.image.load(path.join(image_folder, picture_name)).convert()
+                self.image_loading_of_explosion.set_colorkey(BLACK)
+                self.image = pygame.transform.scale(self.image_loading_of_explosion, (50, 50))
+                self.explosion_list.append(self.image)
 
-    def new(self):
-        # initializing all variables and setup them for a new game
-        self.walls = pygame.sprite.Group()  # created the walls group to hold them all
-        self.bullets = pygame.sprite.Group()
-        self.shields = pygame.sprite.Group()
-        self.all_sprites = pygame.sprite.Group()
-        for row, tiles in enumerate(self.map):
-            for col, tile in enumerate(tiles):
-                if tile == '1':
-                    Wall(self, col, row)
-                if tile == '*':
-                    self.player = Player(self, col, row)
-                if tile == '-':
-                    self.enemy = Enemy(self, col, row)
-                # if tile == '@':
-                #     ShieldItem(self, col, row)
-                    
-        self.game_over = False  # Đặt lại trạng thái game
-        self.Score = False # reset score 
-
-    def run(self):
-            while not self.game_over:  # Thay đổi điều kiện dừng vòng lặp
-                self.changing_time = self.clock.tick(FPS) / 1000
-                self.events()
-                self.update()
-                self.draw()
-                
-            # Reset trạng thái điểm khi kết thúc màn chơi
-            self.SCORE2 = 0
-            self.SCORE1 = 0
-            
-            while self.playing:
-                self.changing_time = self.clock.tick(FPS) / 1000
-                self.events()
-                self.update()
-                self.draw()
-
-                # Thêm kiểm tra để chuyển sang trạng thái chơi game khi điều kiện đạt được
-                if self.Score:
-                    self.SCORE2 = 0
-                    self.SCORE1 = 0
-                    self.new()
-                    self.run()
-
-    def grid(self):
-        for x in range(0, WIDTH, SQSIZE):
-            pygame.draw.line(self.screen, WHITE, (x, 0), (x, HEIGHT))
-        for y in range(0, HEIGHT, SQSIZE):
-            pygame.draw.line(self.screen, WHITE, (0, y), (WIDTH, y))
-
+    # important!
     def menu(self):
         # Initialize buttons
         bgS = pygame.transform.scale(bgStart, (WIDTH, HEIGHT))
@@ -147,20 +90,22 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = event.pos
                     if offline_button.collidepoint(mouse_pos):
-                        self.new()
+                        self.new_offline()
                         self.run()
+                        self.close_offline()
+
+
+                    # CONNECT SERVER
                     elif online_button.collidepoint(mouse_pos):
-                        g_socket.connect((HOST, PORT))
-                        print(f"connect server success!!!")
-                        g_socket.close()
+                        if self.new_online():
+                            self.run()
+                            self.close_online()
+                        else:
+                            print("Server dau thang lol")
+                        
                     elif exit_button.collidepoint(mouse_pos):
                         self.quit()
-                    elif sound_button.collidepoint(mouse_pos):
-                        self.sound_on = not self.sound_on
-                        if self.sound_on:
-                            pygame.mixer.music.play(-1)  # Phát nhạc lặp lại
-                        else:
-                            pygame.mixer.music.stop()
+                    
                     
             # Draw the title image
             title_rect = nameGame.get_rect(center=(WIDTH / 2, HEIGHT / 8))
@@ -171,123 +116,296 @@ class Game:
             self.screen.blit(btnOffline, offline_button.topleft)
             self.screen.blit(btnExit, exit_button.topleft)
             
-            if self.sound_on:
-                self.screen.blit(btnSoundOn, sound_button.topleft)
-            else:
-                self.screen.blit(btnSoundOff, sound_button.topleft)
+
                 
             pygame.display.flip()  # Update display
 
         self.quit()
 
-    def quit(self):
-        pygame.quit()
+    # ONLINE MODE
+    def onlineScreen(self):
+        scaler_bg = pygame.transform.scale(bgStart, (WIDTH, HEIGHT))
+        self.screen.blit(scaler_bg, (0, 0))
+        
+        name_game = Button(100, 30, nameGame)
+        name_game.draw()
+        
+        # Tạo nút "btnStart"
+        btn_start = Button(450, 300, btnStart)
+        btn_start.draw()
+        
+        btn_exit = Button(470, 450, btnExit)
+        btn_exit.draw()
+        
+        pygame.display.flip()
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.quit()
+                if event.type == pygame.KEYUP:
+                    self.Score = False
+                    break  
+                    
+            # Kiểm tra xem nút đã được nhấn chưa
+            if btn_start.draw():
+                g_socket.connect((HOST, PORT))
+                print(f"Connect server success!")
+                self.newOnline()
+                
+            elif btn_exit.draw():
+                self.menu()
+                
+            pygame.display.flip()
+
+    def new_common(self):
+        try:
+            self.all_sprites.empty()
+        except:
+            pass
+
+        try:
+            self.walls.empty()
+        except:
+            pass
+
+        try:
+            self.bullets.empty()
+        except:
+            pass
+        
+        self.all_sprites = pygame.sprite.Group()
+        self.walls = pygame.sprite.Group()  # created the walls group to hold them all
+        self.bullets = pygame.sprite.Group()
+        for row, tiles in enumerate(self.maze):
+            for col, tile in enumerate(tiles):
+                if tile == '1':
+                    Wall(self, col, row)
+                if tile == '*':
+                    self.player = Player(self, col, row)
+                if tile == '-':
+                    self.enemy = Enemy(self, col, row)
+
+    def new_online(self) -> bool:
+        try:
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.connect((HOST, PORT))
+        except:
+            return False
+        
+        self.new_common()
+
+        self.is_online = True
+        self.player_id = -1
+        self.closing_online = False
+
+        self.online_thread = threading.Thread(target=self.handle_server)
+        self.online_thread.start()
+
+        return True
+
+    def close_online(self):
+        self.all_sprites.empty()
+        self.walls.empty()
+        self.bullets.empty()
+
+        self.socket.close()
+        self.closing_online = True
+        self.is_online = False
+        self.online_thread.join()
+
+    def new_offline(self):
+        self.is_online = False
+        self.new_common()
+
+    def close_offline(self):
+        self.all_sprites.empty()
+        self.walls.empty()
+        self.bullets.empty()
+
+    def run(self):
+        self.playing = True
+        self.Score = False
+
+        while self.playing:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.playing = False
+                    break
+
+                if event.type == pygame.KEYDOWN:
+                    if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+                        self.playing = False
+
+            self.changing_time = self.clock.tick(FPS) / 1000  # shows how long the previous frame took
+            self.events()
+            self.update()
+            self.draw()
+        if self.Score:
+            self.SCORE2 = 0
+            self.SCORE1 = 0
+
+    def grid(self):
+        for x in range(0, WIDTH, SQSIZE):
+            pygame.draw.line(self.screen, WHITE, (x, 0), (x, HEIGHT))
+        for y in range(0, HEIGHT, SQSIZE):
+            pygame.draw.line(self.screen, WHITE, (0, y), (WIDTH, y))
 
     def events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.quit()
 
-            if self.game_over and event.type == pygame.KEYUP:
-                self.new()
-                self.run()
-                
     def update(self):
-        # keep track changing
+
+        new_key_state = pygame.key.get_pressed()
+
+        if self.is_online:
+            # send keys data to server
+            if self.player_id == 0:
+                self.player.last_key_state = new_key_state
+                try:
+                    self.socket.sendall(pickle.dumps([self.player.position, self.player.rot, new_key_state[pygame.K_m]]))
+                except:
+                    self.running = False
+
+
+            if self.player_id == 1:
+                self.enemy.last_key_state = new_key_state
+                try:
+                    self.socket.sendall(pickle.dumps([self.enemy.position, self.enemy.rot, new_key_state[pygame.K_m]]))
+                except:
+                    self.running = False
+
+        else:
+
+            self.player.last_key_state = new_key_state
+            self.enemy.last_key_state = new_key_state
+
         self.all_sprites.update()
         self.hit()
+
+    def hit(self):
+
+        self.hits1 = pygame.sprite.spritecollide(self.player, self.bullets, True, collide)
+        for hit in self.hits1:
+            if hit:
+                Explosion(self, hit.rect.center)
+                self.explosion_sound.play()
+                self.player.kill()
+                self.SCORE1 += 1
+                self.data()
+                
+                self.new_common()
+
+                if self.SCORE1 == 5:
+                    self.show_go_screen1() 
+                    self.playing = False
+
+        self.hits2 = pygame.sprite.spritecollide(self.enemy, self.bullets, True, collide)
+        for hit in self.hits2:
+            if hit:
+                Explosion(self, hit.rect.center)
+                self.explosion_sound.play()
+                self.enemy.kill()
+                self.SCORE2 += 1
+                self.data()
+
+                self.new_common()
+                
+                if self.SCORE2 == 5:
+                    self.show_go_screen2()
+                    self.playing = False
 
     def draw(self):
         # flip all the thing to screen
         self.screen.fill(BGCOLOR)
         self.grid()
         self.all_sprites.draw(self.screen)
-        # kietbui
-        # item_rect = self.threebullet.get_rect(center=self.screen.get_rect().center)
-        # self.screen.blit(self.threebullet, item_rect)
         drawing_text(self.screen, str(self.SCORE1) + ':Green Tank', 25, 150, 710, GREEN)
         drawing_text(self.screen, 'Blue Tank:' + str(self.SCORE2), 25, 900, 710, BLUE)
         pygame.display.flip()
 
-    def hit(self):
-        self.hits1 = pygame.sprite.spritecollide(self.player, self.bullets, True, collide)
-        if self.hits1:
-            Explosion(self, self.player.rect.center)
-            self.explosion_sound.play()
-            self.player.kill()
-            self.SCORE1 += 1
-            self.playing = False
-            self.all_sprites.draw(self.screen)
-            pygame.display.flip()
-            pygame.time.delay(1000)
-            self.data()
-            self.new()
-            
-        if self.SCORE1 == 5:
-            self.show_go_screen1()
-                    
-        self.hits2 = pygame.sprite.spritecollide(self.enemy, self.bullets, True, collide)
-        if self.hits2:
-            Explosion(self, self.enemy.rect.center)
-            self.explosion_sound.play()
-            self.enemy.kill()
-            self.SCORE2 += 1
-            self.playing = False
-            self.all_sprites.draw(self.screen)
-            pygame.display.flip()
-            pygame.time.delay(1000)
-            self.data()
-            self.new()
-            
-        if self.SCORE2 == 5:
-            self.show_go_screen2()
-                    
-        # Draw all sprites after updating the explosions
-        self.all_sprites.draw(self.screen)
-        pygame.display.flip()  # Update the display after drawing
+    def quit(self):
+        pygame.quit()  # uninitialize all pygame modules
+        quit()
 
     def show_go_screen1(self):
-        bgW = pygame.transform.scale(bgWin, (WIDTH, HEIGHT))
-        self.screen.blit(bgW,(0,0))
-        self.screen.blit(textWin,(120,0))
-        # self.screen.blit(cup, (400,0))
-        drawing_text(self.screen, 'Green Tank Win', 80, WIDTH / 2, HEIGHT / 3, GREEN)
-        drawing_text(self.screen, 'SCORE:' + str(self.SCORE1) + '-' + str(self.SCORE2), 40, WIDTH / 2,  340, GREEN)
-        drawing_text(self.screen, 'Press enter key to begin or escape key to quit', 20, WIDTH / 2, HEIGHT - 30 , RED)
-       
+        self.screen.fill(BROWN)
+        drawing_text(self.screen, 'Green Tank wins', 80, WIDTH / 2, HEIGHT / 3, GREEN)
+        drawing_text(self.screen, 'Press a key to begin or escape key to quit', 40, WIDTH / 2, HEIGHT / 2, WHITE)
         pygame.display.flip()
         self.wait_for_key()
-        self.game_over = True
-        
+
     def show_go_screen2(self):
-        bgW = pygame.transform.scale(bgWin, (WIDTH, HEIGHT))
-        self.screen.blit(bgW,(0,0))
-        self.screen.blit(textWin,(120,0))
-        # self.screen.blit(cup, (400,0))
-        drawing_text(self.screen, 'Blue Tank Win', 80, WIDTH / 2, HEIGHT / 3, BLUE)
-        drawing_text(self.screen, 'SCORE:' + str(self.SCORE2) + '-' + str(self.SCORE1) , 40, WIDTH / 2, 340, BLUE)
-        drawing_text(self.screen, 'Press enter key to begin or escape key to quit', 20, WIDTH / 2, HEIGHT - 30, RED)
-   
+        self.screen.fill(BROWN)
+        drawing_text(self.screen, 'Blue Tank Wins', 80, WIDTH / 2, HEIGHT / 3, BLUE)
+        drawing_text(self.screen, 'Press a key to begin or escape key to quit', 40, WIDTH / 2, HEIGHT / 2, WHITE)
         pygame.display.flip()
         self.wait_for_key()
-        self.game_over = True
-        
+
     def wait_for_key(self):
-        key_pressed = False
-        while not key_pressed:
-            self.clock.tick(FPS)
+        pygame.event.wait()
+        waiting = True
+        while waiting:
+            self.clock.tick(FPS)  # keep loop running
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    waiting = False
                     self.quit()
                 if event.type == pygame.KEYUP:
-                    if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE:  # Only break the loop if 'Enter' is pressed
-                         key_pressed = True
-        self.Score = False  # Đặt lại trạng thái chơi game
+                    self.Score = True
+                    waiting = False
 
+    def handle_server(self):
+        while not self.closing_online:
+            if self.player_id == -1:
+                self.socket.send(pickle.dumps([None, None, None])) # need modify
+                print("Waiting for player id")
+
+            try:
+                byte_data = self.socket.recv(1024)
+                if not byte_data:
+                    print(f"Online session closed")
+                    break
+            except:
+                print(f"Online session closed")
+                break
+
+            try:
+                data = pickle.loads(byte_data)
+            except pickle.UnpicklingError:
+                continue
         
-# Create game object
-g = Game()
-while True:
-    g.menu()
-    g.new()
-    g.run()
+            if self.player_id == -1:
+                self.player_id = data[0] 
+                print(f"Player id: {self.player_id}")
+                continue
+
+            # do nothing if game is not initialized
+            if g_game == None:
+                continue
+
+            if self.player_id == 0:
+                if data[1] != None:
+                    g_game.enemy.position = data[1]
+                if data[2] != None:
+                    g_game.enemy.rot = data[2]
+                if data[3] != None:
+                    g_game.enemy.should_fire = data[3]
+
+            
+            if self.player_id == 1:
+                if data[1] != None:
+                    g_game.player.position = data[1]
+                if data[2] != None:
+                    g_game.player.rot = data[2]
+                if data[3] != None:
+                    g_game.player.should_fire = data[3]
+
+
+            print(f"Received key states from server")
+    
+g_game = Game()
+
+g_game.menu()
