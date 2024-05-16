@@ -227,6 +227,43 @@ class Game:
         self.all_sprites.draw(self.screen)
         pygame.display.flip()  # Update the display after drawing
 
+    def show_go_screen1(self):
+        self.screen.fill(BROWN)
+        # self.screen.blit(cup, (400,0))
+        drawing_text(self.screen, 'Green Tank Win', 80, WIDTH / 2, HEIGHT / 3, GREEN)
+        drawing_text(self.screen, 'SCORE:' + str(self.SCORE1) + '-' + str(self.SCORE2), 40, WIDTH / 2,  340, GREEN)
+        drawing_text(self.screen, 'Press enter key to begin or escape key to quit', 40, WIDTH / 2, HEIGHT / 2, WHITE)
+        # scaled_player1 = pygame.transform.scale(player1, (300, 300))
+        # self.screen.blit(scaled_player1, (350,500))
+        pygame.display.flip()
+        self.wait_for_key()
+        self.game_over = True
+        
+    def show_go_screen2(self):
+        self.screen.fill(BROWN)
+        # self.screen.blit(cup, (400,0))
+        drawing_text(self.screen, 'Blue Tank Win', 80, WIDTH / 2, HEIGHT / 3, BLUE)
+        drawing_text(self.screen, 'SCORE:' + str(self.SCORE2) + '-' + str(self.SCORE1) , 40, WIDTH / 2, 340, BLUE)
+        drawing_text(self.screen, 'Press enter key to begin or escape key to quit', 40, WIDTH / 2, HEIGHT / 2, WHITE)
+        # scaled_player2 = pygame.transform.scale(player2, (300, 300))
+        # self.screen.blit(scaled_player2, (350,500))
+        pygame.display.flip()
+        self.wait_for_key()
+        self.game_over = True
+        
+    def wait_for_key(self):
+        key_pressed = False
+        while not key_pressed:
+            self.clock.tick(FPS)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.quit()
+                if event.type == pygame.KEYUP:
+                    if event.key == pygame.K_RETURN:  # Only break the loop if 'Enter' is pressed
+                         key_pressed = True
+        self.Score = False  # Đặt lại trạng thái chơi game
+
+        
 # Create game object
 g = Game()
 while True:
