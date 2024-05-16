@@ -33,6 +33,9 @@ class Game:
         pygame.display.set_caption(TITLE)
         self.SCORE1 = 0
         self.SCORE2 = 0
+        self.sound_on = True
+        pygame.mixer.music.load('sound/background_music.mp3')  # tải file nhạc
+        pygame.mixer.music.play(-1)  # phát nhạc (lặp đi lặp lại với -1)
         self.data()
 
     def data(self):
@@ -120,7 +123,8 @@ class Game:
         online_button = pygame.Rect(WIDTH / 2 - button_width / 2, HEIGHT / 2 - button_height / 2, button_width, button_height)
         offline_button = pygame.Rect(WIDTH / 2 - button_width / 2, HEIGHT / 2 + button_height, button_width, button_height)
         exit_button = pygame.Rect(WIDTH / 2 - button_width / 2, HEIGHT / 2 + button_height * 2.5  , button_width, button_height)
-
+        sound_button = pygame.Rect(0, 0, btnSoundOn.get_width(), btnSoundOn.get_height())
+        
         running = True
         while running:
             self.screen.blit(bgS, (0, 0))  # Draw the background image first
@@ -136,6 +140,12 @@ class Game:
                         self.run()
                     elif online_button.collidepoint(mouse_pos):
                         pass
+                    elif sound_button.collidepoint(mouse_pos):
+                        self.sound_on = not self.sound_on
+                        if self.sound_on:
+                            pygame.mixer.music.play(-1)  # Phát nhạc lặp lại
+                        else:
+                            pygame.mixer.music.stop()
                     
             # Draw the title image
             title_rect = nameGame.get_rect(center=(WIDTH / 2, HEIGHT / 8))
@@ -146,6 +156,11 @@ class Game:
             self.screen.blit(btnOffline, offline_button.topleft)
             self.screen.blit(btnExit, exit_button.topleft)
             
+            if self.sound_on:
+                self.screen.blit(btnSoundOn, sound_button.topleft)
+            else:
+                self.screen.blit(btnSoundOff, sound_button.topleft)
+                
             pygame.display.flip()  # Update display
 
         self.quit()
