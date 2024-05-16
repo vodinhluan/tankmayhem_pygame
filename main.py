@@ -39,6 +39,7 @@ class Game:
         pygame.display.set_caption(TITLE)
         self.SCORE1 = 0
         self.SCORE2 = 0
+        self.last_maze_no = 0
         self.sound_on = True
         pygame.mixer.music.load('sound/background_music.mp3')  # tải file nhạc
         pygame.mixer.music.play(-1)  # phát nhạc (lặp đi lặp lại với -1)
@@ -50,7 +51,11 @@ class Game:
         Maps = path.join(folder_of_game, 'MAPS')
         sound_folder = path.join(folder_of_game, 'sound')
         self.map = []
-        i = random.randint(1, 5)
+        if hasattr(self, 'last_maze_no'):
+            i = random.choice([j for j in range(1, 11) if j != self.last_maze_no])
+        else:
+            i = random.randint(1, 10)
+        self.last_maze_no = i
         with open(path.join(Maps, 'MAP{}.txt'.format(i)), 'rt') as f:
             for line in f:
                 self.map.append(line)
@@ -215,8 +220,8 @@ class Game:
             self.all_sprites.draw(self.screen)
             pygame.display.flip()
             pygame.time.delay(1000)
-            self.new()
             self.data()
+            self.new()
             
         if self.SCORE1 == 5:
             self.show_go_screen1()
@@ -231,8 +236,8 @@ class Game:
             self.all_sprites.draw(self.screen)
             pygame.display.flip()
             pygame.time.delay(1000)
-            self.new()
             self.data()
+            self.new()
             
         if self.SCORE2 == 5:
             self.show_go_screen2()
