@@ -25,15 +25,13 @@ Tank Mayhem Pygame - Nơi chiến thắng thuộc về những kẻ dũng mãnh!
 Hãy sẵn sàng cho những trận chiến xe tăng bùng nổ, nơi bạn sẽ thể hiện bản lĩnh và chiến thuật của mình. Tải Tank Mayhem Pygame ngay hôm nay và tham gia vào thế giới chiến tranh đầy kịch tính!
 
 WEB DEMO: https://vodinhluan.github.io/web-introduce-tankmayhem/
-Link github Web: https://github.com/vodinhluan/web-introduce-tankmayhem
 
 # CÁCH CHƠI
 1. Chế độ Offline:
-
 Hai người chơi, một màn hình: Cùng thỏa sức chiến đấu với người bạn của bạn trên cùng một máy tính. Người chơi 1 điều khiển xe tăng bằng WASD, bắn bằng Q, trong khi người chơi 2 sử dụng mũi tên để di chuyển và M để bắn.
 Chống lại kẻ thù AI: Rèn luyện kỹ năng của bạn bằng cách chiến đấu với kẻ thù do AI điều khiển. Hãy thể hiện bản lĩnh và chiến thuật của bạn để đánh bại mọi đối thủ.
-2. Chế độ Online:
 
+2. Chế độ Online:
 Kết nối với bạn bè: Tham gia vào các trận chiến xe tăng trực tuyến gay cấn cùng bạn bè của bạn.
 Tham gia server: Tìm kiếm và tham gia các server để chiến đấu với những người chơi khác từ khắp nơi trên thế giới.
 Player vs Enemy: Người chơi đầu tiên tham gia server sẽ là Player, người chơi thứ hai tham gia sẽ là Enemy. Hai bên sẽ đối đầu nhau trong trận chiến xe tăng đầy kịch tính.
