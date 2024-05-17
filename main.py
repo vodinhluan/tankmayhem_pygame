@@ -1,4 +1,4 @@
-HOST = '192.168.2.9'  # Replace with server's hostname or IP address
+HOST = '192.168.1.105'  # Replace with server's hostname or IP address
 PORT = 65432
 
 import socket
@@ -38,6 +38,10 @@ class Game:
         pygame.display.set_caption(TITLE)
         self.SCORE1 = 0
         self.SCORE2 = 0
+        self.last_maze_no = 0
+        self.sound_on = True
+        pygame.mixer.music.load('sound/background_music.mp3')  # tải file nhạc
+        pygame.mixer.music.play(-1)  # phát nhạc (lặp đi lặp lại với -1)
         self.data()
         self.is_online = None
 
@@ -94,19 +98,22 @@ class Game:
                         self.run()
                         self.close_offline()
 
-
                     # CONNECT SERVER
                     elif online_button.collidepoint(mouse_pos):
                         if self.new_online():
                             self.run()
                             self.close_online()
                         else:
-                            print("Server dau thang lol")
-                        
+                            print("Server not start!!!")
+                    elif sound_button.collidepoint(mouse_pos):
+                        self.sound_on = not self.sound_on
+                        if self.sound_on:
+                            pygame.mixer.music.play(-1)  # Phát nhạc lặp lại
+                        else:
+                            pygame.mixer.music.stop()
                     elif exit_button.collidepoint(mouse_pos):
                         self.quit()
-                    
-                    
+                         
             # Draw the title image
             title_rect = nameGame.get_rect(center=(WIDTH / 2, HEIGHT / 8))
             self.screen.blit(nameGame, title_rect)
@@ -116,47 +123,50 @@ class Game:
             self.screen.blit(btnOffline, offline_button.topleft)
             self.screen.blit(btnExit, exit_button.topleft)
             
+            if self.sound_on:
+                self.screen.blit(btnSoundOn, sound_button.topleft)
+            else:
+                self.screen.blit(btnSoundOff, sound_button.topleft)
 
-                
             pygame.display.flip()  # Update display
 
         self.quit()
+        
+    #  ONLINE MODE
+    # def onlineScreen(self):
+    #     scaler_bg = pygame.transform.scale(bgStart, (WIDTH, HEIGHT))
+    #     self.screen.blit(scaler_bg, (0, 0))
+        
+    #     name_game = Button(100, 30, nameGame)
+    #     name_game.draw()
+        
+    #     # Tạo nút "btnStart"
+    #     btn_start = Button(450, 300, btnStart)
+    #     btn_start.draw()
+        
+    #     btn_exit = Button(470, 450, btnExit)
+    #     btn_exit.draw()
+        
+    #     pygame.display.flip()
 
-    # ONLINE MODE
-    def onlineScreen(self):
-        scaler_bg = pygame.transform.scale(bgStart, (WIDTH, HEIGHT))
-        self.screen.blit(scaler_bg, (0, 0))
-        
-        name_game = Button(100, 30, nameGame)
-        name_game.draw()
-        
-        # Tạo nút "btnStart"
-        btn_start = Button(450, 300, btnStart)
-        btn_start.draw()
-        
-        btn_exit = Button(470, 450, btnExit)
-        btn_exit.draw()
-        
-        pygame.display.flip()
-
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.quit()
-                if event.type == pygame.KEYUP:
-                    self.Score = False
-                    break  
+    #     while True:
+    #         for event in pygame.event.get():
+    #             if event.type == pygame.QUIT:
+    #                 self.quit()
+    #             if event.type == pygame.KEYUP:
+    #                 self.Score = False
+    #                 break  
                     
-            # Kiểm tra xem nút đã được nhấn chưa
-            if btn_start.draw():
-                g_socket.connect((HOST, PORT))
-                print(f"Connect server success!")
-                self.newOnline()
+    #         # Kiểm tra xem nút đã được nhấn chưa
+    #         if btn_start.draw():
+    #             g_socket.connect((HOST, PORT))
+    #             print(f"Connect server success!")
+    #             self.newOnline()
                 
-            elif btn_exit.draw():
-                self.menu()
+    #         elif btn_exit.draw():
+    #             self.menu()
                 
-            pygame.display.flip()
+    #         pygame.display.flip()
 
     def new_common(self):
         try:
@@ -331,19 +341,31 @@ class Game:
         quit()
 
     def show_go_screen1(self):
-        self.screen.fill(BROWN)
-        drawing_text(self.screen, 'Green Tank wins', 80, WIDTH / 2, HEIGHT / 3, GREEN)
-        drawing_text(self.screen, 'Press a key to begin or escape key to quit', 40, WIDTH / 2, HEIGHT / 2, WHITE)
+        bgW = pygame.transform.scale(bgWin, (WIDTH, HEIGHT))
+        self.screen.blit(bgW,(0,0))
+        self.screen.blit(textWin,(120,0))
+        # self.screen.blit(cup, (400,0))
+        drawing_text(self.screen, 'Green Tank Win', 80, WIDTH / 2, HEIGHT / 3, GREEN)
+        drawing_text(self.screen, 'SCORE:' + str(self.SCORE1) + '-' + str(self.SCORE2), 40, WIDTH / 2,  340, GREEN)
+        drawing_text(self.screen, 'Press enter key to begin or escape key to quit', 20, WIDTH / 2, HEIGHT - 30 , RED)
+       
         pygame.display.flip()
         self.wait_for_key()
-
+        self.game_over = True
+        
     def show_go_screen2(self):
-        self.screen.fill(BROWN)
-        drawing_text(self.screen, 'Blue Tank Wins', 80, WIDTH / 2, HEIGHT / 3, BLUE)
-        drawing_text(self.screen, 'Press a key to begin or escape key to quit', 40, WIDTH / 2, HEIGHT / 2, WHITE)
+        bgW = pygame.transform.scale(bgWin, (WIDTH, HEIGHT))
+        self.screen.blit(bgW,(0,0))
+        self.screen.blit(textWin,(120,0))
+        # self.screen.blit(cup, (400,0))
+        drawing_text(self.screen, 'Blue Tank Win', 80, WIDTH / 2, HEIGHT / 3, BLUE)
+        drawing_text(self.screen, 'SCORE:' + str(self.SCORE2) + '-' + str(self.SCORE1) , 40, WIDTH / 2, 340, BLUE)
+        drawing_text(self.screen, 'Press enter key to begin or escape key to quit', 20, WIDTH / 2, HEIGHT - 30, RED)
+   
         pygame.display.flip()
         self.wait_for_key()
-
+        self.game_over = True
+        
     def wait_for_key(self):
         pygame.event.wait()
         waiting = True
@@ -351,18 +373,22 @@ class Game:
             self.clock.tick(FPS)  # keep loop running
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    waiting = False
-                    self.quit()
+                    if event.key == pygame.K_ESCAPE:
+                        waiting = False
+                        self.quit()
                 if event.type == pygame.KEYUP:
-                    self.Score = True
-                    waiting = False
+                    if event.key == pygame.K_RETURN:
+                        self.Score = True
+                        waiting = False
 
     def handle_server(self):
+        #closing_online sai thì chạy khối lệnh
         while not self.closing_online:
             if self.player_id == -1:
                 self.socket.send(pickle.dumps([None, None, None])) # need modify
                 print("Waiting for player id")
 
+            #nhận dữ liệu từ server
             try:
                 byte_data = self.socket.recv(1024)
                 if not byte_data:
@@ -371,12 +397,13 @@ class Game:
             except:
                 print(f"Online session closed")
                 break
-
+            
             try:
                 data = pickle.loads(byte_data)
             except pickle.UnpicklingError:
                 continue
-        
+            
+            #kiểm tra nếu không còn player 
             if self.player_id == -1:
                 self.player_id = data[0] 
                 print(f"Player id: {self.player_id}")
@@ -385,7 +412,8 @@ class Game:
             # do nothing if game is not initialized
             if g_game == None:
                 continue
-
+            
+            # cập nhật action của other player tại client của mình 
             if self.player_id == 0:
                 if data[1] != None:
                     g_game.enemy.position = data[1]
@@ -394,7 +422,6 @@ class Game:
                 if data[3] != None:
                     g_game.enemy.should_fire = data[3]
 
-            
             if self.player_id == 1:
                 if data[1] != None:
                     g_game.player.position = data[1]
@@ -403,9 +430,7 @@ class Game:
                 if data[3] != None:
                     g_game.player.should_fire = data[3]
 
-
             print(f"Received key states from server")
     
 g_game = Game()
-
 g_game.menu()
