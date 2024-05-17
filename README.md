@@ -25,6 +25,7 @@ Tank Mayhem Pygame - Nơi chiến thắng thuộc về những kẻ dũng mãnh!
 Hãy sẵn sàng cho những trận chiến xe tăng bùng nổ, nơi bạn sẽ thể hiện bản lĩnh và chiến thuật của mình. Tải Tank Mayhem Pygame ngay hôm nay và tham gia vào thế giới chiến tranh đầy kịch tính!
 
 WEB DEMO: https://vodinhluan.github.io/web-introduce-tankmayhem/
+LINK BÁO CÁO LATEX: https://www.overleaf.com/project/662e10f8831a0f3aee08b511
 
 # CÁCH CHƠI
 1. Chế độ Offline:
