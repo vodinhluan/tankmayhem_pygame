@@ -12,7 +12,7 @@ clients_cnn = []
 
 def start_server():
     global g_socket
-
+    # khai báo, đồng bộ, lắng nghe
     g_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     g_socket.bind((HOST, PORT))
     print("PVP tank server started \nBinding to port", PORT)
@@ -20,7 +20,7 @@ def start_server():
     accept_players()
     
 def accept_players():
-    global threads
+    # global threads
 
     for i in range(MAX_PLAYERS):
         conn, addr = g_socket.accept()
@@ -33,17 +33,21 @@ def accept_players():
 
         threads.append(thread)
 
+    # chờ tất cả các luồng kết thúc 
+    # trước khi tiếp tục thực hiện các lệnh khác
     for thread in threads:
         thread.join()
 
 def handle_client(conn, addr):
     while True:
+        # nhận dữ liệu từ client dưới dạng byte data, max 1024 bytes
         byte_data = conn.recv(1024)
         if not byte_data:
             print(f"Connection {addr} closed")
             break
 
         try:
+            # chuyển byte -> data object
             data = pickle.loads(byte_data)
         except pickle.UnpicklingError:
             print(f"Error unpickling data from {addr}")
@@ -54,6 +58,8 @@ def handle_client(conn, addr):
         player_index = clients_cnn.index(conn)
 
         # send self
+        # pickle.dumps: chuyển object thành bytes để gửi đi
+        # [index, vị trí, rotation, state]   
         conn.sendall(pickle.dumps([player_index, None, None, None])) # need modify
 
         # send to other player

@@ -8,9 +8,9 @@ vector = pygame.math.Vector2
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
-        self.groups = game.all_sprites                     # ???????????
-        pygame.sprite.Sprite.__init__(self, self.groups)    # ???????????
-        self.game = game                                    # ???????????
+        self.groups = game.all_sprites                     
+        pygame.sprite.Sprite.__init__(self, self.groups)    
+        self.game = game                                   
         self.image = game.enemy_image
         self.rect = self.image.get_rect()
         self.hit_rect = enemy_box
@@ -32,6 +32,7 @@ class Enemy(pygame.sprite.Sprite):
         if len(key_state) == 0:
             return
         
+        # XỬ LÝ nếu Offline thì Enemy là WASD, còn Onl thì là mũi tên
         if  self.game.is_online and key_state[pygame.K_LEFT] or \
             not self.game.is_online and key_state[pygame.K_a]:
 

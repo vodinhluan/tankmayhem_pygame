@@ -2,15 +2,13 @@ import pygame
 from Setting import *
 from sprites.Bullet import Bullet
 
-
-
 vector = pygame.math.Vector2
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
-        self.groups = game.all_sprites
+        self.groups = game.all_sprites # dễ qly hơn, update đồng bộ các sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
-        self.game = game
+        self.game = game # truy cập thông tin về game
         self.image = game.player_image
         self.rect = self.image.get_rect()
         self.hit_rect = player_box
@@ -24,11 +22,12 @@ class Player(pygame.sprite.Sprite):
         self.should_fire = False
 
     def update_key_state(self):
-        key_state = self.last_key_state
+        key_state = self.last_key_state # Lấy trạng thái phím trước đó
 
         self.rotation_speed = 0
         self.vel = vector(0, 0)
 
+        # khi không nhấn gì -> không trả về gì
         if len(key_state) == 0:
             return
 
@@ -41,7 +40,8 @@ class Player(pygame.sprite.Sprite):
         if key_state[pygame.K_DOWN]:
             self.vel = vector(0, -playerSpeed/2).rotate(-self.rot)
         if key_state[pygame.K_m] or self.should_fire:
-            now = pygame.time.get_ticks()
+            now = pygame.time.get_ticks() #  đo thời gian giữa các lần bắn đạn
+            # kiểm tra xem đã đến lúc bắn đạn hay chưa
             if now - self.last_fire > bullet_rate:
                 self.last_fire = now
                 direction = vector(0, 1).rotate(-self.rot)

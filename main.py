@@ -168,7 +168,10 @@ class Game:
                 
     #         pygame.display.flip()
 
+
     def new_common(self):
+        # vì làm chung offline vs online mode
+        # nên phải xóa sạch các sprites groups
         try:
             self.all_sprites.empty()
         except:
@@ -196,6 +199,7 @@ class Game:
                 if tile == '-':
                     self.enemy = Enemy(self, col, row)
 
+    # kiểm tra có online hay không
     def new_online(self) -> bool:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -242,7 +246,8 @@ class Game:
                 if event.type == pygame.QUIT:
                     self.playing = False
                     break
-
+                
+                # nhấn esc để thoát ra menu
                 if event.type == pygame.KEYDOWN:
                     if pygame.key.get_pressed()[pygame.K_ESCAPE]:
                         self.playing = False
@@ -267,12 +272,13 @@ class Game:
                 self.quit()
 
     def update(self):
-
         new_key_state = pygame.key.get_pressed()
 
+        # xử lý truyền data di chuyển và bắn lên server
         if self.is_online:
             # send keys data to server
             if self.player_id == 0:
+                # nếu client 1 join vào trước -> player
                 self.player.last_key_state = new_key_state
                 try:
                     self.socket.sendall(pickle.dumps([self.player.position, self.player.rot, new_key_state[pygame.K_m]]))
@@ -281,14 +287,15 @@ class Game:
 
 
             if self.player_id == 1:
+                # nếu client 2 join vào trước -> enemy
                 self.enemy.last_key_state = new_key_state
                 try:
                     self.socket.sendall(pickle.dumps([self.enemy.position, self.enemy.rot, new_key_state[pygame.K_m]]))
                 except:
                     self.running = False
 
+        # XỬ LÝ BÊN OFFLINE
         else:
-
             self.player.last_key_state = new_key_state
             self.enemy.last_key_state = new_key_state
 
@@ -296,7 +303,7 @@ class Game:
         self.hit()
 
     def hit(self):
-
+        # collide giữa player vs đạn
         self.hits1 = pygame.sprite.spritecollide(self.player, self.bullets, True, collide)
         for hit in self.hits1:
             if hit:
@@ -312,6 +319,7 @@ class Game:
                     self.show_go_screen1() 
                     self.playing = False
 
+        # collide giữa enemy vs đạn
         self.hits2 = pygame.sprite.spritecollide(self.enemy, self.bullets, True, collide)
         for hit in self.hits2:
             if hit:
